@@ -43,18 +43,20 @@ runNormJaccard <- function(obj, tmp.folder, method, row.center, row.scale, low.t
 
 #' @export
 runNormJaccard.default <- function(
-	obj, 
+    obj,
 	tmp.folder,
-	method=c("residual", "zscore"), 
+	ncell.chunk=1000,
+	method=c("normOVE", "normOVN"),
+	k=15,
 	row.center=TRUE,
-	row.scale=TRUE, 
-	low.threshold=-5, 
-	high.threshold=5, 
-	do.par=FALSE,
-	ncell.chunk=1000, 
-	num.cores=1,
+	row.scale=TRUE,
+	low.threshold=-5,
+	high.threshold=5,
+	do.par=TRUE,
+	num.cores = 1,
 	seed.use=10
-){
+	){
+
 	if(missing(obj)){
 		stop("obj is missing")
 	}else{
@@ -62,12 +64,12 @@ runNormJaccard.default <- function(
 			stop("'obj' is not a snap obj")
 		}
 	}
-	
+
 	if(missing(tmp.folder)){
 		stop("tmp.folder is missing")
 	}else{
 		if(!dir.exists(tmp.folder)){
-			stop("tmp.folder does not exist");			
+			stop("tmp.folder does not exist");
 		}
 	}
 
@@ -76,9 +78,9 @@ runNormJaccard.default <- function(
 	}else{
 		if(isJaccardNorm(obj@jmat)){
 			stop("jaccard index matrix has been normalized")
-		}		
+		}
 	}
-	
+
 	if(!is.logical(row.center)){
 		stop("row.center is not a logical")
 	}
@@ -86,7 +88,15 @@ runNormJaccard.default <- function(
 	if(!is.logical(row.scale)){
 		stop("row.scale is not a logical")
 	}
-	
+
+	if(ncell.chunk < 1000){
+		stop("ncell.chunk must be larger than 1000")
+	}
+
+	if(k < 10 || k > 50){
+		stop("k must be in the range between 5 and 50")
+	}
+
 	if(low.threshold > high.threshold){
 		stop("low.threshold must be smaller than high.threshold");
 	}
@@ -94,11 +104,9 @@ runNormJaccard.default <- function(
 	if(low.threshold > 0 || high.threshold < 0){
 		stop("low.threshold must be smaller than 0 and high.threshold must be greater than 0");
 	}
-	
-	method = match.arg(method);
-	jmat = obj@jmat@jmat;
-	b1 = obj@jmat@p1;
-	b2 = obj@jmat@p2;
+
+	b1 <- obj@jmat@p1;
+	b2 <- obj@jmat@p2;
 
 	if(do.par){
 	    # input checking for parallel options
@@ -112,58 +120,59 @@ runNormJaccard.default <- function(
 	      } else if (num.cores != 1) {
 	        num.cores <- 1
 		}
-	
+
+		method = match.arg(method);
+
 		# step 2) slice the orginal obj into list
 		id = seq(nrow(obj));
-		id.ls = split(id, ceiling(seq(id)/ncell.chunk));
-		
+		id.ls = split(id, ceiling(seq(id)/ncell.chunk ));
+
 		if(length(id.ls) > 1){
 			id.ls[[length(id.ls) - 1]] = c(id.ls[[length(id.ls) - 1]], id.ls[[length(id.ls)]]);
 			# remove the last item of the list
 			id.ls = id.ls[-length(id.ls)];
-		}	
-		
+		}
+
 		prefix_tmp = tempfile(pattern = "file", tmpdir = tmp.folder);
 		backingfile_tmp <- paste(prefix_tmp, ".bin", sep="");
 		descriptorfile_tmp <- paste(prefix_tmp, ".desc", sep="");
-	
-		x <- as.big.matrix(x = obj@jmat@jmat, 
-						   type = "double", 
-		                   separated = FALSE, 
+
+		x <- as.big.matrix(x = obj@jmat@jmat, type = "double",
+		                   separated = FALSE,
 						   backingpath=tmp.folder,
-		                   backingfile = basename(backingfile_tmp), 
+		                   backingfile = basename(backingfile_tmp),
 		                   descriptorfile = basename(descriptorfile_tmp)
-						   );
-	
+						  );
+
+
 		cl <- makeCluster(num.cores);
-		registerDoParallel(cl);	
-		
-		nmat <- foreach(i=1:length(id.ls), .verbose=FALSE, .packages="bigmemory", .combine = "rbind") %dopar% {
+		registerDoParallel(cl);
+
+		nmat <- foreach(i=1:length(id.ls), .verbose=FALSE, .export="normJaccard", .packages="bigmemory", .combine = "rbind") %dopar% {
 		    t_mat <- attach.big.matrix(descriptorfile_tmp);
-			return(normObservedJmat2(jmat=t_mat[id.ls[[i]],], b1=b1[id.ls[[i]]], b2=b2, method=method));
+			return(normJaccard(jmat=t_mat[id.ls[[i]],], b1=b1[id.ls[[i]]], b2=b2, method, k));
 		}
-		
 		stopCluster(cl);
 		closeAllConnections();
+
 		rm(x);
 		file.remove(backingfile_tmp);
 		file.remove(descriptorfile_tmp);
 		gc();
 	}else{
-		model.init = trainRegressModel(jmat, b1, b2);
-		nmat = normObservedJmat(obj@jmat@jmat, model.init, obj@jmat@p1, obj@jmat@p2, method=method);
+		nmat <- normJaccard(jmat=obj@jmat@jmat, b1=b1, b2=b2, method, k);
 	}
-	
+
 	if(row.center || row.scale){
 		nmat = t(scale(t(nmat), center=row.center, scale=row.scale));
 	}
-	
+
 	nmat[nmat >= high.threshold] = high.threshold;
 	nmat[nmat <= low.threshold]  = low.threshold;
 
 	obj@jmat@jmat = nmat;
-	obj@jmat@method = method;
-	obj@jmat@norm = TRUE;	
+	#obj@jmat@method = method;
+	obj@jmat@norm = TRUE;
 	return(obj);
 }
 

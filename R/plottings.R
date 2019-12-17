@@ -5,10 +5,10 @@
 #' @param pdf.width the width of the graphics region in inches [7].
 #' @param pdf.height the height of the graphics region in inches [7].
 #' @param ... Arguments passed to hist method.
-#' @examples 
+#' @examples
 #' data(demo.sp);
 #' plotBarcode(demo.sp, col="grey", border="grey");
-#' @importFrom graphics par hist 
+#' @importFrom graphics par hist
 #' @importFrom grDevices pdf dev.off
 #' @export
 plotBarcode <- function(obj, pdf.file.name, pdf.width, pdf.height, ...) {
@@ -22,7 +22,7 @@ plotBarcode.default <- function(
 	pdf.width=7,
 	pdf.height=7,
 	...
-	){	
+	){
 
 	if(missing(obj)){
 		stop("obj is missing");
@@ -35,29 +35,29 @@ plotBarcode.default <- function(
 		# check the input
 		barcode = obj@metaData;
 	}
-	
+
 	if(!is.null(pdf.file.name)){
 		if(file.exists(pdf.file.name)){
 			warning("pdf.file already exists");
 			file.remove(pdf.file.name);
 		}else{
 			if(!file.create(pdf.file.name)){
-				stop("cannot create pdf.file, not a directory")				
+				stop("cannot create pdf.file, not a directory")
 			}
 			file.remove(pdf.file.name);
-		}	
-		pdf(pdf.file.name,width=pdf.width,height=pdf.height); 
+		}
+		pdf(pdf.file.name,width=pdf.width,height=pdf.height);
 	}
-			
+
 	par(mfrow=c(3,2));
 	hist(log(barcode$TN + 1,10), main="log10(Total Fragments)", xlab="log10(Total Fragments + 1)", ...);
 	hist(log(barcode$UQ + 1,10), main="log10(UMI)", xlab="log10(UMI + 1)", ...);
 	hist((barcode$UM+1)/(barcode$TN+1), main="Mappability Ratio", xlab="Mappability", xlim=c(0, 1), ...);
 	hist((barcode$PP+1)/(barcode$UM+1), main="Proper Paired Ratio", xlab="Proper Paired",xlim=c(0, 1), ...);
 	hist(1 - (barcode$UQ+1)/(barcode$PP+1), main="Duplicate Rate Ratio", xlab="Duplicate Rate", xlim=c(0, 1), ...);
-	hist((barcode$CM+1) / (barcode$UQ+1), main="chrM Rate Ratio", xlab="chrM Rate", xlim=c(0, 1), ...);	
+	hist((barcode$CM+1) / (barcode$UQ+1), main="chrM Rate Ratio", xlab="chrM Rate", xlim=c(0, 1), ...);
 	if(!is.null(pdf.file.name)){
-		dev.off()		
+		dev.off()
 	}
 	graphics::par(mfrow=c(1,1));
 }
@@ -70,7 +70,7 @@ plotBarcode.default <- function(
 #' @param pdf.width the width of the graphics region in inches [7].
 #' @param pdf.height the height of the graphics region in inches [7].
 #' @param ... Arguments passed to hist method.
-#' @examples 
+#' @examples
 #' data(demo.sp);
 #' plotBinCoverage(demo.sp, col="grey", border="grey");
 #' @importFrom stats sd
@@ -83,13 +83,13 @@ plotBinCoverage <- function(obj, rm.zeros, pdf.file.name, pdf.width, pdf.height,
 
 #' @export
 plotBinCoverage.default <- function(
-	obj, 
+	obj,
 	rm.zeros=TRUE,
 	pdf.file.name=NULL,
-	pdf.width=7, 
-	pdf.height=7, 
+	pdf.width=7,
+	pdf.height=7,
 	...
-){	
+){
 	if(missing(obj)){
 		stop("obj is missing");
 	}else{
@@ -98,35 +98,35 @@ plotBinCoverage.default <- function(
 		}
 		ncell = nrow(obj);
 		data.use = obj@bmat;
-		
+
 		if((x=nrow(data.use)) == 0L){
 			stop("cell-by-bin matrix is empty, run addBmatToSnap first")
 		}
 	}
-	
+
 	if(!is.null(pdf.file.name)){
 		if(file.exists(pdf.file.name)){
 			warning("pdf.file already exists");
 			file.remove(pdf.file.name);
 		}else{
 			if(!file.create(pdf.file.name)){
-				stop("cannot create pdf.file, not a directory")				
+				stop("cannot create pdf.file, not a directory")
 			}
 			file.remove(pdf.file.name);
-		}	
-		grDevices::pdf(pdf.file.name,width=pdf.width,height=pdf.height); 
+		}
+		grDevices::pdf(pdf.file.name,width=pdf.width,height=pdf.height);
 	}
-	
-	
+
+
 	cov = Matrix::colSums(data.use);
-	idy = seq(cov);	
-	cov = cov[which(cov > 0)];	
+	idy = seq(cov);
+	cov = cov[which(cov > 0)];
 	cov = log10(cov + 1);
 	cov = (cov - mean(cov)) / sd(cov);
 	hist(cov, ...);
-	
+
 	if(!is.null(pdf.file.name)){
-		grDevices::dev.off()		
+		grDevices::dev.off()
 	}
 	graphics::par(mfrow=c(1,1));
 }
@@ -138,8 +138,8 @@ plotBinCoverage.default <- function(
 #' @param point.size Point size [1].
 #' @param point.shape Point shape type [19].
 #' @param point.alpha Point transparancy level [0.8].
-#' @param point.color Color of point. Two options, points color by 
-#' cell cluster label or sample ID c("cluster", "sample"). 
+#' @param point.color Color of point. Two options, points color by
+#' cell cluster label or sample ID c("cluster", "sample").
 #' @param text.add Whether to add cluster label text at the centroid of each cluster [TRUE].
 #' @param text.size Cluster label text size [5].
 #' @param text.color Cluster label text color ["black"].
@@ -156,55 +156,55 @@ plotBinCoverage.default <- function(
 #' @param pdf.height the height of the graphics region in inches [7].
 #' @param ... Arguments passed to plot method.
 #'
-#' @examples 
+#' @examples
 #' data(demo.sp);
 #' plotViz(
-#' 	obj=demo.sp, 
-#' 	method="tsne", 
-#' 	point.color="sample", 
+#' 	obj=demo.sp,
+#' 	method="tsne",
+#' 	point.color="sample",
 #' 	text.add=FALSE,
 #'	legend.add=TRUE
 #' );
-#' 
+#'
 #' @importFrom grDevices pdf dev.off
 #' @importFrom methods slot
 #' @importFrom scales alpha
 #' @importFrom graphics plot text title legend
 #' @export
-plotViz <- function(obj, 
-	method, 
-	point.size, 
-	point.shape, 
-	point.alpha, 
-	point.color, 
-	text.add, 
-	text.size, 
-	text.color, 
-	text.halo.add, 
-	text.halo.color, 
-	text.halo.width, 
-	legend.add, 
-	legend.pos, 
+plotViz <- function(obj,
+	method,
+	point.size,
+	point.shape,
+	point.alpha,
+	point.color,
+	text.add,
+	text.size,
+	text.color,
+	text.halo.add,
+	text.halo.color,
+	text.halo.width,
+	legend.add,
+	legend.pos,
 	legend.text.size,
 	legend.text.color,
-	down.sample, 
-	pdf.file.name, 
-	pdf.width, 
-	pdf.height, 
+	down.sample,
+	pdf.file.name,
+	pdf.width,
+	pdf.height,
 	...
 ){
   UseMethod("plotViz", obj);
 }
 
 #' @export
-plotViz.default <- function(obj, 
-		method=c("tsne", "umap"), 
-		point.size=1, 
-		point.shape=19, 
-		point.alpha=0.8, 
+plotViz.default <- function(obj,
+		method=c("tsne", "umap"),
+		point.size=1,
+		point.shape=19,
+		point.alpha=0.8,
 		point.color=NULL,
 		text.add=TRUE,
-		text.size=1, 
+		text.size=1,
 		text.color="black",
 		text.halo.add=TRUE,
 		text.halo.color="white",
@@ -215,10 +215,10 @@ plotViz.default <- function(obj,
 		legend.text.color="black",
 		down.sample=10000,
 		pdf.file.name=NULL,
-		pdf.width=7, 
+		pdf.width=7,
 		pdf.height=7,
 		...
-){	
+){
 	if(missing(obj)){
 		stop("obj is missing");
 	}else{
@@ -227,11 +227,11 @@ plotViz.default <- function(obj,
 		}
 		ncell = nrow(obj);
 	}
-		
+
 	if(is.integer(down.sample)){
 		stop("down.sample must be an integer");
 	}
-	
+
 	method = match.arg(method);
 	data.use = as.data.frame(slot(obj, method));
 	if(method=="tsne"){
@@ -244,42 +244,42 @@ plotViz.default <- function(obj,
 	}
 	xlims = c(-max(abs(data.use[,1])) * 1.05, max(abs(data.use[,1])) * 1.2);
 	ylims = c(-max(abs(data.use[,2])) * 1.05, max(abs(data.use[,2])) * 1.05);
-	
+
 	cluster = point.color;
 	if(((x=length(cluster)) == 0L) | (is.null(point.color))){
 		warning("cluster does not exist, text.add is ignored")
 		text.add = FALSE;
 	}
-	
-	if(length(cluster) != 0L){	
+
+	if(length(cluster) != 0L){
 		data.use$col = factor(cluster);
 	}else{
 		data.use$col = factor(1);
 	}
-	
+
 	if(!is.null(pdf.file.name)){
 		if(file.exists(pdf.file.name)){
 			warning("pdf.file already exists");
 			file.remove(pdf.file.name);
 		}else{
 			if(!file.create(pdf.file.name)){
-				stop("cannot create pdf.file, not a directory")				
+				stop("cannot create pdf.file, not a directory")
 			}
 			file.remove(pdf.file.name);
-		}	
-		pdf(pdf.file.name,width=pdf.width,height=pdf.height); 
+		}
+		pdf(pdf.file.name,width=pdf.width,height=pdf.height);
 	}
-	
+
 	legend.pos = match.arg(legend.pos);
 	down.sample = min(down.sample, ncell);
 	idx.ds = sort(sample(seq(ncell), down.sample));
 	data.use = data.use[idx.ds,,drop=FALSE]
-										
+
 	colPanel = createColorPanel(length(unique(data.use$col)));
 	graphics::plot(
 				   data.use[,c(1,2)],
-		 		   cex=point.size, 
-		 		   pch=point.shape, 
+		 		   cex=point.size,
+		 		   pch=point.shape,
 		 		   col=scales::alpha(colPanel[factor(data.use$col)], point.alpha),
 				   bty="l",
 				   font.lab=2,
@@ -293,25 +293,25 @@ plotViz.default <- function(obj,
 		xx = findCentrod(data.use[,c(1,2)], data.use$col);
 		textHalo(x=xx[,1], y=xx[,2], labels = xx[,3], col=text.color, bg=text.halo.color, r=text.halo.width, cex=text.size);
   	}
-	
+
 	if(legend.add){
 		legend.ncol = as.integer(length(levels(data.use$col)) / 25) +1;
 		legend(
-		  "topright", 
-		  legend = levels(factor(data.use$col)), 
+		  "topright",
+		  legend = levels(factor(data.use$col)),
 		  col = colPanel,
 		  pch = point.shape,
-		  pt.cex=1, 
-		  bty = "n", 
-		  cex = legend.text.size, 
+		  pt.cex=1,
+		  bty = "n",
+		  cex = legend.text.size,
 		  text.col = legend.text.color,
 		  horiz = FALSE,
 		  ncol=legend.ncol
-		  )		
+		  )
 	}
 
 	if(!is.null(pdf.file.name)){
-		dev.off()		
+		dev.off()
 	}
 }
 
@@ -334,17 +334,17 @@ plotViz.default <- function(obj,
 #' x = rexp(nrow(demo.sp));
 #' x = (x-min(x))/(max(x)-min(x));
 #' PlotFeatureSingle(
-#' 	obj=demo.sp, 
+#' 	obj=demo.sp,
 #' 	feature.value=x,
-#' 	method="tsne", 
-#' 	point.size=1, 
-#' 	point.shape=19, 
-#' 	down.sample=10000, 
-#' 	pdf.file.name=NULL, 
-#' 	pdf.width=7, 
+#' 	method="tsne",
+#' 	point.size=1,
+#' 	point.shape=19,
+#' 	down.sample=10000,
+#' 	pdf.file.name=NULL,
+#' 	pdf.width=7,
 #' 	pdf.height=7
 #' )
-#' 
+#'
 #' @importFrom grDevices pdf dev.off
 #' @importFrom methods slot
 #' @importFrom scales alpha
@@ -353,15 +353,15 @@ plotViz.default <- function(obj,
 #' @importFrom viridis viridis
 #' @export
 plotFeatureSingle <- function(
-	obj, 
+	obj,
 	feature.value,
-	method, 
-	point.size, 
-	point.shape, 
-	down.sample, 
-	pdf.file.name, 
-	pdf.width, 
-	pdf.height, 
+	method,
+	point.size,
+	point.shape,
+	down.sample,
+	pdf.file.name,
+	pdf.width,
+	pdf.height,
 	quantiles,
 	...
 ){
@@ -370,18 +370,18 @@ plotFeatureSingle <- function(
 
 #' @export
 plotFeatureSingle.default <- function(
-	obj, 
+	obj,
 	feature.value,
-	method=c("tsne", "umap"), 
-	point.size=1, 
-	point.shape=19, 
+	method=c("tsne", "umap"),
+	point.size=1,
+	point.shape=19,
 	down.sample=10000,
 	pdf.file.name=NULL,
-	pdf.width=7, 
+	pdf.width=7,
 	pdf.height=7,
 	quantiles=c(0.01, 0.99),
 	...
-){	
+){
 	if(missing(obj)){
 		stop("obj is missing");
 	}else{
@@ -390,18 +390,18 @@ plotFeatureSingle.default <- function(
 		}
 		ncell = nrow(obj);
 	}
-	
+
 	if(missing(feature.value)){
 		stop("feature.value is missing")
 	}
-	
+
 	if(is.integer(down.sample)){
 		stop("down.sample must be an integer");
 	}
-	
+
 	method = match.arg(method);
 	data.use = as.data.frame(slot(obj, method));
-	
+
 	if(method=="tsne"){
 		colnames(data.use) = c("TSNE-1", "TSNE-2")
 		lab.names = c("TSNE-1", "TSNE-2");
@@ -409,60 +409,60 @@ plotFeatureSingle.default <- function(
 		colnames(data.use) = c("UMAP-1", "UMAP-2")
 		lab.names = c("UMAP-1", "UMAP-2");
 	}
-	
+
 	if((x=nrow(data.use)) == 0L){
 		stop("visulization method does not exist, run runViz first!")
 	}
-	
+
 	if(nrow(data.use) != length(feature.value)){
 		stop("feature.value has different length with number of cells in obj")
 	}
-	
+
 	quantiles.low = quantile(feature.value, quantiles[1]);
 	quantiles.high = quantile(feature.value, quantiles[2]);
 	feature.value[feature.value > quantiles.high] = quantiles.high;
 	feature.value[feature.value < quantiles.low ] = quantiles.low;
-	
+
 	if(!is.null(pdf.file.name)){
 		if(file.exists(pdf.file.name)){
 			warning("pdf.file already exists");
 			file.remove(pdf.file.name);
 		}else{
 			if(!file.create(pdf.file.name)){
-				stop("cannot create pdf.file, not a directory")				
+				stop("cannot create pdf.file, not a directory")
 			}
 			file.remove(pdf.file.name);
-		}	
-		pdf(pdf.file.name,width=pdf.width,height=pdf.height); 
+		}
+		pdf(pdf.file.name,width=pdf.width,height=pdf.height);
 	}
-	
+
 	down.sample = min(down.sample, ncell);
 	idx.ds = sort(sample(seq(ncell), down.sample));
 	data.use = data.use[idx.ds,,drop=FALSE];
 	feature.value = feature.value[idx.ds];
 	xlims = c(-max(abs(data.use[,1])) * 1.05, max(abs(data.use[,1])) * 1.2);
 	ylims = c(-max(abs(data.use[,2])) * 1.05, max(abs(data.use[,2])) * 1.05);
-	
+
 	plot3D::scatter2D(
 				   x=data.use[,1],
 				   y=data.use[,2],
 				   colvar=feature.value,
-		 		   cex=point.size, 
-		 		   pch=point.shape, 
+		 		   cex=point.size,
+		 		   pch=point.shape,
 				   bty="l",
 				   font.lab=2,
 				   col.axis = 'darkgrey',
-				   xlim=xlims, 
-				   ylim=ylims, 
+				   xlim=xlims,
+				   ylim=ylims,
 				   xlab=lab.names[1],
 				   ylab=lab.names[2],
 				   col=viridis(256, option = "D"),
 		 		   ...
 				   );
   	box(bty="l", lwd=2)
-										
+
 	if(!is.null(pdf.file.name)){
-		dev.off()		
+		dev.off()
 	}
 }
 
@@ -476,12 +476,12 @@ plotFeatureSingle.default <- function(
 #' @param pdf.file.name pdf file name to save the plot [NULL].
 #' @param pdf.width the width of the graphics region in inches [7].
 #' @param pdf.height the height of the graphics region in inches [7].
-#' @param ... Arguments passed to plot function. 
+#' @param ... Arguments passed to plot function.
 #'
-#' @examples 
+#' @examples
 #' data(demo.sp);
 #' plotDimReductElbow(demo.sp);
-#' 
+#'
 #' @importFrom grDevices pdf dev.off
 #' @importFrom methods slot
 #' @importFrom scales alpha
@@ -493,7 +493,7 @@ plotDimReductElbow <- function(obj, point.size, point.shape, point.color, point.
 
 #' @export
 plotDimReductElbow.default <- function(
-	obj, 
+	obj,
 	point.size=1.5,
 	point.shape=19,
 	point.color="red",
@@ -511,7 +511,7 @@ plotDimReductElbow.default <- function(
 		}
 		ncell = nrow(obj);
 		if(!isDimReductComplete(obj@smat)){
-			stop("obj does not have valid dim.reduct object, run 'runDimReduct' first");			
+			stop("obj does not have valid dim.reduct object, run 'runDimReduct' first");
 		}
 	}
 
@@ -521,16 +521,16 @@ plotDimReductElbow.default <- function(
 			file.remove(pdf.file.name);
 		}else{
 			if(!file.create(pdf.file.name)){
-				stop("cannot create pdf.file, not a directory")				
+				stop("cannot create pdf.file, not a directory")
 			}
 			file.remove(pdf.file.name);
-		}	
-		pdf(pdf.file.name,width=pdf.width,height=pdf.height); 
+		}
+		pdf(pdf.file.name,width=pdf.width,height=pdf.height);
 	}
-	
-	data.use = data.frame(PC=1:length(obj@smat@sdev), sd=obj@smat@sdev);	
+
+	data.use = data.frame(PC=1:length(obj@smat@sdev), sd=obj@smat@sdev);
 	plot(x=data.use[,1], y=data.use[,2], cex=point.size, pch=point.shape, col=alpha(point.color, point.alpha), xlab="PCs", ylab="Standard Deviation of PCs");
-		
+
 	if(!is.null(pdf.file.name)){
 		dev.off()
 	}
@@ -549,11 +549,11 @@ plotDimReductElbow.default <- function(
 #' @param pdf.file.name pdf file name to save the plot [NULL].
 #' @param pdf.width the width of the graphics region in inches [7].
 #' @param pdf.height the height of the graphics region in inches [7].
-#' 
-#' @examples 
+#'
+#' @examples
 #' data(demo.sp);
 #' plotDimReductPW(demo.sp, eigs.dims=1:10);
-#' 
+#'
 #' @importFrom grDevices pdf dev.off
 #' @importFrom methods slot
 #' @importFrom scales alpha
@@ -565,18 +565,18 @@ plotDimReductPW <- function(obj, eigs.dims, point.size, point.color, point.shape
 
 #' @export
 plotDimReductPW.default <- function(
-	obj, 
-	eigs.dims=1:50,
+    obj,
+	pca.dims=1:50,
 	point.size=0.5,
 	point.color="grey",
 	point.shape=19,
 	point.alpha=0.5,
 	down.sample=3000,
-	pdf.file.name=NULL, 
-	pdf.height=7, 
+	pdf.file.name=NULL,
+	pdf.height=7,
 	pdf.width=7
 ){
-	
+
 	if(missing(obj)){
 		stop("obj is missing");
 	}else{
@@ -588,57 +588,57 @@ plotDimReductPW.default <- function(
 			stop("dim.reduct is not complete, run 'runDimReduct' first")
 		}
 	}
-		
+
 	down.sample = min(down.sample, ncell);
 	idx.ds = sort(sample(seq(ncell), down.sample));
 	obj = obj[idx.ds,,drop=FALSE];
 
-	if(max(eigs.dims) > length(obj@smat@sdev)){
-		stop(paste("eigs.dims exceeds PCA dimentions ", length(obj@smat@sdev)));
+	if(max(pca.dims) > length(obj@smat@sdev)){
+		stop(paste("pca.dims exceeds PCA dimentions ", length(obj@smat@sdev)));
 	}
-	
-	if((x=length(eigs.dims)) > 50L){
-		stop("eigs.dims must be within 1:50")
+
+	if((x=length(pca.dims)) > 50L){
+		stop("pca.dims must be within 1:50")
 	}
-	
-	
+
+
 	if(!is.null(pdf.file.name)){
 		if(file.exists(pdf.file.name)){
 			warning("pdf.file already exists");
 			file.remove(pdf.file.name);
 		}else{
 			if(!file.create(pdf.file.name)){
-				stop("cannot create pdf.file, not a directory")				
+				stop("cannot create pdf.file, not a directory")
 			}
 			file.remove(pdf.file.name);
-		}	
-		pdf(pdf.file.name,width=pdf.width,height=pdf.height); 
+		}
+		pdf(pdf.file.name,width=pdf.width,height=pdf.height);
 	}
-	
+
 	op <- par(mfrow = c(5,5), oma = c(3,3,1,1) + 0.2, mar = c(0,0,1,1) + 0.2);
-	PCA.plot <- split(sort(eigs.dims), ceiling(seq(eigs.dims)/2));
-	if((length(x = eigs.dims)  %% 2) == 1){
+	PCA.plot <- split(sort(pca.dims), ceiling(seq(pca.dims)/2));
+	if((length(x = pca.dims)  %% 2) == 1){
 		PCA.plot = PCA.plot[1:(length(PCA.plot) - 1)]
 	}
-	
+
 	for(x in PCA.plot){
-		data.use = data.frame(obj@smat@dmat[,c(x[1],x[2])]);	
+		data.use = data.frame(obj@smat@dmat[,c(x[1],x[2])]);
 		colnames(data.use) = c("dim1", "dim2");
-		plot(x=data.use[,1], 
+		plot(x=data.use[,1],
 			 y=data.use[,2],
-			 cex=point.size, 
+			 cex=point.size,
 			 col=scales::alpha(point.color, point.alpha),
-			 mtext(paste(paste("eigs", x[1]), x[2], sep=" vs "), side=3),
-			 yaxt='n', 
+			 mtext(paste(paste("PC", x[1]), x[2], sep=" vs "), side=3),
+			 yaxt='n',
 			 xaxt="n",
-			 xlab="", 
+			 xlab="",
 			 ylab=""
 		);
 	}
 
 	if(!is.null(pdf.file.name)){
-		dev.off()		
-	}	
+		dev.off()
+	}
 	graphics::par(mfrow=c(1,1));
 }
 
@@ -665,8 +665,8 @@ plotDimReductPW.default <- function(
 #' @param pdf.width the width of the graphics region in inches [7].
 #' @param pdf.height the height of the graphics region in inches [7].
 #' @param ... Arguments passed to plot method.
-#' 
-#' @examples 
+#'
+#' @examples
 #' data(demo.sp);
 #' demo.sp = scaleCountMatrix(
 #'	obj=demo.sp,
@@ -675,19 +675,19 @@ plotDimReductPW.default <- function(
 #'	method="RPM"
 #'	)
 #' gene.names = c(
-#'	"Prdm14",   "E330040D14Rik", "Gm17971",       
+#'	"Prdm14",   "E330040D14Rik", "Gm17971",
 #'	"Gm17970",	"Defb44-ps",     "Gm7357",
 #'	"Gm37265",  "Kctd18",		"Gm37143"
 #'	)
 #' plotGene(
-#'	obj=demo.sp, 
-#'	gene.names=gene.names, 
+#'	obj=demo.sp,
+#'	gene.names=gene.names,
 #'	viz.method="tsne"
 #'	)
 #' @importFrom grDevices pdf dev.off
-#' @importFrom methods slot 
+#' @importFrom methods slot
 #' @importFrom scales alpha
-#' @importFrom graphics par points plot 
+#' @importFrom graphics par points plot
 #' @importFrom grDevices pdf dev.off
 #' @export
 plotGene <- function(obj, gene.names, viz.method, point.size, point.color, point.shape,  background.point, background.point.color, background.point.alpha, background.point.size, background.point.shape, low.value, high.value, down.sample, seed.use, plot.nrow, plot.ncol, pdf.file.name, pdf.height, pdf.width,...){
@@ -696,7 +696,7 @@ plotGene <- function(obj, gene.names, viz.method, point.size, point.color, point
 
 #' @export
 plotGene.default <- function(
-	obj, 
+	obj,
 	gene.names,
 	viz.method=c("tsne", "umap"),
 	point.size=0.5,
@@ -713,12 +713,12 @@ plotGene.default <- function(
 	seed.use=10,
 	plot.nrow=3,
 	plot.ncol=3,
-	pdf.file.name=NULL, 
-	pdf.height=7, 
+	pdf.file.name=NULL,
+	pdf.height=7,
 	pdf.width=7,
 	...
 ){
-	
+
 	if(missing(obj)){
 		stop("obj is missing")
 	}else{
@@ -734,7 +734,7 @@ plotGene.default <- function(
 			stop("gmat has different number of rows from cell number, add gmat again")
 		}
 	}
-	
+
 	if(missing(gene.names)){
 		stop("gene.names is missing")
 	}else{
@@ -743,80 +743,80 @@ plotGene.default <- function(
 		}
 		if(any(!(gene.names %in% colnames(data.use)))){
 			stop(paste(gene.names[which(!(gene.names %in% colnames(data.use)))], "does not exist in cell-by-gene matrix"))
-		};	
+		};
 	}
 
 	viz.method = match.arg(viz.method);
 	viz.use = methods::slot(obj, viz.method);
-	
+
 	if((x = nrow(viz.use)) == 0L){
 		stop("visulization matrix is empty, run runViz first")
 	}
-	
-	
+
+
 	if(down.sample < ncell){
 		set.seed(seed.use);
 		idx = sort(sample(seq(ncell), down.sample));
 		data.use = data.use[idx,];
 		viz.use = viz.use[idx,];
 	}
-	
+
 	if(!is.null(pdf.file.name)){
 		if(file.exists(pdf.file.name)){
 			warning("pdf.file already exists");
 			file.remove(pdf.file.name);
 		}else{
 			if(!file.create(pdf.file.name)){
-				stop("cannot create pdf.file, not a directory")				
+				stop("cannot create pdf.file, not a directory")
 			}
 			file.remove(pdf.file.name);
-		}	
-		pdf(pdf.file.name,width=pdf.width,height=pdf.height); 
+		}
+		pdf(pdf.file.name,width=pdf.width,height=pdf.height);
 	}
-	
+
 	ndim = length(gene.names);
-	
+
 	op <- par(mfrow = c(plot.nrow,plot.ncol), oma = c(3,3,1,1) + 0.2, mar = c(0,0,1,1) + 0.2);
-	
+
 	for(i in seq(ndim)){
 		y = data.use[,which(colnames(data.use) == gene.names[i])];
 		y = pmin(1, y/quantile(y[which(y > 0)], 0.99));
 		y[y < low.value] = 0;
 		y[y > high.value] = 1;
 		if(background.point){
-			plot(viz.use, 
+			plot(viz.use,
 	   			 main=gene.names[i],
-				 col=scales::alpha(background.point.color, background.point.alpha), 
+				 col=scales::alpha(background.point.color, background.point.alpha),
 				 cex=background.point.size,
 				 pch=background.point.shape,
-		   		 yaxt='n', 
+		   		 yaxt='n',
 		   		 xaxt="n",
-		   		 xlab="", 
+		   		 xlab="",
 		   		 ylab="",
 				 ...
-				 );	
-		 	points(viz.use, 
-		 		   col=alpha(point.color, y), 
+				 );
+		 	points(viz.use,
+		 		   col=alpha(point.color, y),
 		 		   cex=point.size,
 		 		   pch=point.shape
-		 		 );	
+		 		 );
 		}else{
-			plot(viz.use, 
+			plot(viz.use,
 	   			 main=gene.names[i],
-				 col=alpha(point.color, y), 
+				 col=alpha(point.color, y),
 				 cex=point.size,
 				 pch=point.shape,
-		   		 yaxt='n', 
+		   		 yaxt='n',
 		   		 xaxt="n",
-		   		 xlab="", 
+		   		 xlab="",
 		   		 ylab="",
 				 ...
-				 );	
+				 );
 		}
 	}
-	
+
 	if(!is.null(pdf.file.name)){
-		dev.off()		
+		dev.off()
 	}
 	par(mfrow=c(1,1));
 }
@@ -837,32 +837,32 @@ plotGene.default <- function(
 #' @param pdf.height the height of the graphics region in inches [7].
 #' @importFrom grDevices pdf dev.off
 #' @importFrom graphics stripchart boxplot
-#' @importFrom methods slot 
+#' @importFrom methods slot
 #' @importFrom scales alpha
 #' @importFrom methods is
-#' 
+#'
 #' @examples
 #' data(demo.sp);
 #' boxPlotFeature(demo.sp, rnorm(nrow(demo.sp)));
-#' 
+#'
 #' @export
 boxPlotFeature <- function(obj, feature, outline, ylab, main, add.point,  point.size, point.shape, point.alpha, pdf.file.name, pdf.height, pdf.width){
   UseMethod("boxPlotFeature", obj);
 }
 
-#' @export 
+#' @export
 boxPlotFeature.default <- function(
-	obj, 
-	feature, 
-	outline=FALSE, 
-	ylab=NULL, 
-	main=NULL, 
-	add.point=TRUE, 
-	point.size=0.2, 
-	point.shape=19, 
-	point.alpha=0.5, 
-	pdf.file.name=NULL, 
-	pdf.height=7, 
+	obj,
+	feature,
+	outline=FALSE,
+	ylab=NULL,
+	main=NULL,
+	add.point=TRUE,
+	point.size=0.2,
+	point.shape=19,
+	point.alpha=0.5,
+	pdf.file.name=NULL,
+	pdf.height=7,
 	pdf.width=7
 ){
 	if(missing(obj)){
@@ -880,35 +880,35 @@ boxPlotFeature.default <- function(
 			stop("gmat has different number of rows from cell number, add gmat again")
 		}
 	}
-	
+
 	if(length(data.use) != length(feature)){
 		stop("feature has different length with cell number");
 	}
-	
-	
+
+
 	if(!is.null(pdf.file.name)){
 		if(file.exists(pdf.file.name)){
 			warning("pdf.file already exists");
 			file.remove(pdf.file.name);
 		}else{
 			if(!file.create(pdf.file.name)){
-				stop("cannot create pdf.file, not a directory")				
+				stop("cannot create pdf.file, not a directory")
 			}
 			file.remove(pdf.file.name);
-		}	
-		grDevices::pdf(pdf.file.name,width=pdf.width,height=pdf.height); 
+		}
+		grDevices::pdf(pdf.file.name,width=pdf.width,height=pdf.height);
 	}
-	
-	colPanel = createColorPanel(length(unique(obj@cluster)));	
-	
+
+	colPanel = createColorPanel(length(unique(obj@cluster)));
+
 	data.use = data.frame(y=feature, cluster=data.use);
 	graphics::boxplot(y ~ cluster, data=data.use, las=3, outline=outline, xlab=NULL, mian=main, ylab=ylab, col = colPanel[data.use$cluster]);
 	if(add.point){
-		graphics::stripchart(y ~ cluster,  data=data.use, vertical = TRUE, method = "jitter", add = TRUE, pch = point.shape, cex=point.size, col = alpha(colPanel[data.use$cluster], point.alpha))		
+		graphics::stripchart(y ~ cluster,  data=data.use, vertical = TRUE, method = "jitter", add = TRUE, pch = point.shape, cex=point.size, col = alpha(colPanel[data.use$cluster], point.alpha))
 	}
-	
+
 	if(!is.null(pdf.file.name)){
-		grDevices::dev.off()		
+		grDevices::dev.off()
 	}
 	graphics::par(mfrow=c(1,1));
 }
@@ -928,7 +928,7 @@ boxPlotFeature.default <- function(
 ######' @param ... Arguments passed to plot function.
 ######' @importFrom grDevices pdf dev.off
 ######' @importFrom graphics stripchart boxplot
-######' @importFrom methods slot 
+######' @importFrom methods slot
 ######' @importFrom cowplot plot_grid
 ######' @importFrom scales alpha
 ######' @export
@@ -946,7 +946,7 @@ boxPlotFeature.default <- function(
 #####	pdf.width=7,
 #####	...
 #####){
-#####	
+#####
 #####}
 #####
 
@@ -967,8 +967,8 @@ boxPlotFeature.default <- function(
 ###' @param pdf.height the height of the graphics region in inches [7].
 ###' @param ... Arguments passed to ggplot.
 ###' @importFrom grDevices pdf dev.off
-###' @import ggplot2 
-###' @importFrom methods slot 
+###' @import ggplot2
+###' @importFrom methods slot
 ###' @importFrom cowplot plot_grid
 ###' @export
 ##plotGene <- function(obj, gene.names, viz.method, point.size, point.color, point.shape, point.alpha, down.sample, pdf.file.name, pdf.height, pdf.width,...){
@@ -977,7 +977,7 @@ boxPlotFeature.default <- function(
 ##
 ###' @export
 ##plotGene.default <- function(
-##	obj, 
+##	obj,
 ##	gene.names,
 ##	viz.method=c("tsne", "umap"),
 ##	point.size=0.5,
@@ -987,8 +987,8 @@ boxPlotFeature.default <- function(
 ##	low.value=0.0,
 ##	high.value=1.0,
 ##	down.sample=10000,
-##	pdf.file.name=NULL, 
-##	pdf.height=7, 
+##	pdf.file.name=NULL,
+##	pdf.height=7,
 ##	pdf.width=7,
 ##	...
 ##){
@@ -1012,7 +1012,7 @@ boxPlotFeature.default <- function(
 ##	if((x = nrow(viz.use))==0L){
 ##		stop("visulization method does not exist, run runViz first")
 ##	}
-##	
+##
 ##	if(missing(gene.names)){
 ##		stop("gene.names is missing")
 ##	}else{
@@ -1022,20 +1022,20 @@ boxPlotFeature.default <- function(
 ##		}
 ##		if(any(!(gene.names %in% colnames(data.use)))){
 ##			stop(paste(gene.names[which(!(gene.names %in% colnames(data.use)))], "does not exist in cell-by-gene matrix"))
-##		};	
+##		};
 ##	}
-##	
+##
 ##	if(!is.null(pdf.file.name)){
 ##		if(file.exists(pdf.file.name)){
 ##			warning("pdf.file already exists");
 ##			file.remove(pdf.file.name);
 ##		}else{
 ##			if(!file.create(pdf.file.name)){
-##				stop("cannot create pdf.file, not a directory")				
+##				stop("cannot create pdf.file, not a directory")
 ##			}
 ##			file.remove(pdf.file.name);
-##		}	
-##		pdf(pdf.file.name,width=pdf.width,height=pdf.height); 
+##		}
+##		pdf(pdf.file.name,width=pdf.width,height=pdf.height);
 ##	}
 ##
 ##	plt.list = lapply(as.list(seq(length(gene.names))), function(i){
@@ -1048,32 +1048,32 @@ boxPlotFeature.default <- function(
 ##		data.use = data.frame(viz.use[,1], viz.use[,2], y);
 ##		colnames(data.use) = c("tsne1", "tsne2", "value");
 ##		data.use.pos = data.use[which(y > 0),];
-##		sp2 <- ggplot() + 
+##		sp2 <- ggplot() +
 ##			geom_point(data=data.use, aes(x=data.use$tsne1, y=data.use$tsne2), color="#D3D3D3", size=point.size) +
 ##			geom_point(data=data.use.pos, aes(x=data.use.pos$tsne1, y=data.use.pos$tsne2, color= data.use.pos$value), size=point.size, shape=point.shape, alpha=point.alpha) +
-##			scale_colour_gradient2() + 
+##			scale_colour_gradient2() +
 ##  		  	theme(
-##				panel.grid.major = element_blank(), 
+##				panel.grid.major = element_blank(),
 ##				panel.grid.minor = element_blank(),
-##				panel.background = element_blank(), 
-##				legend.position='none', 
+##				panel.background = element_blank(),
+##				legend.position='none',
 ##				axis.line = element_line(colour = "black", linetype = "solid")
-##				) +			
+##				) +
 ##			ggtitle(label=gene.names[i]) +
 ##		    xlab("Dim-1") + ylab("Dim-2")
 ##		return(sp2)
 ##	})
-##	
+##
 ##    if (length(x = plt.list) > 9) {
 ##      nCol <- 4
 ##    } else {
 ##      nCol <- min(length(x = plt.list), 3)
 ##    }
-##	
+##
 ##	plots.combined <- plot_grid(plotlist = plt.list, ncol = nCol);
 ##	if(!is.null(pdf.file.name)){
-##		dev.off()		
+##		dev.off()
 ##	}else{
 ##		print(plots.combined)
-##	}	
+##	}
 ##}
