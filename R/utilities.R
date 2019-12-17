@@ -4,8 +4,8 @@ findCentrod <- function(x, y){
 	centroid.ls = lapply(split(data.frame(x),y), function(xx) apply(xx, 2, median))
 	centroid.df = data.frame(do.call(rbind, centroid.ls))
 	centroid.df$Y = names(centroid.ls);
-	
-	return(centroid.df);		
+
+	return(centroid.df);
 }
 
 
@@ -15,7 +15,7 @@ findNegCells <- function(obj, idx.pos, method=c("knn", "random", "other")){
 	ncell = nrow(obj);
 	ncell.pos = length(idx.pos);
 	ncell.neg = min(length(idx.pos), ncell - ncell.pos);
-	
+
 	if(method == "knn"){
 		idx.neg = setdiff(seq(ncell), idx.pos);
 		dx = order(Matrix::colSums(mat.use[idx.pos,idx.neg]), decreasing=TRUE)[1:ncell.neg];
@@ -24,9 +24,9 @@ findNegCells <- function(obj, idx.pos, method=c("knn", "random", "other")){
 		idx.neg = setdiff(seq(ncell), idx.pos);
 		nn.num = min(length(idx.pos), length(idx.neg));
 		set.seed(10);
-		idx.neg = sample(idx.neg, nn.num);	
+		idx.neg = sample(idx.neg, nn.num);
 	}else if(method == "other"){
-		idx.neg = setdiff(seq(ncell), idx.pos);			
+		idx.neg = setdiff(seq(ncell), idx.pos);
 	}
 	return(idx.neg);
 }
@@ -35,7 +35,7 @@ pvalue2fdr <- function(p1, p2){
 	fdr.ls <- lapply(as.list(seq(0.001, 1, by=0.001)), function(p_i){
 		(length(which(p2 <= p_i))) / (length(which(p1 <= p_i)))
 	})
-	fdr.tab = data.frame(p=seq(0.001, 1, by=0.001), fdr=do.call(c, fdr.ls));	
+	fdr.tab = data.frame(p=seq(0.001, 1, by=0.001), fdr=do.call(c, fdr.ls));
 	return(fdr.tab);
 }
 
@@ -46,13 +46,13 @@ splitBmat <- function(mat, id.ls, num.cores=1, tmp.folder){
 		stop("tmp.folder is missing")
 	}else{
 		if(!dir.exists(tmp.folder)){
-			stop("tmp.folder does not exist");			
+			stop("tmp.folder does not exist");
 		}
 	}
 	fileList = mclapply(as.list(seq(id.ls)), function(i){
 		file.name = tempfile(fileext=".rds", tmpdir=tmp.folder);
-		zz <- file(description=file.name, "w"); 
-		saveRDS(mat[id.ls[[i]],], file=file.name);		
+		zz <- file(description=file.name, "w");
+		saveRDS(mat[id.ls[[i]],], file=file.name);
 		close(zz);
 		file.name
 	}, mc.cores=num.cores);
@@ -64,7 +64,7 @@ runJaccard2 <- function(
 	obj1,
 	obj2,
 	input.mat=c("bmat", "pmat", "gmat")
-){	
+){
 	calJaccard <- function(X_i, X_j){
 		A = Matrix::tcrossprod(X_i, X_j);
 		bi = Matrix::rowSums(X_i);
@@ -73,11 +73,11 @@ runJaccard2 <- function(
 		rm(A);
 		rm(bi);
 		rm(bj);
-		gc();	
-		return(jmat);				
+		gc();
+		return(jmat);
 	}
-	
-	input.mat = match.arg(input.mat);	
+
+	input.mat = match.arg(input.mat);
 	if(input.mat == "bmat"){
 		data.use1 = obj1@bmat;
 		data.use2 = obj2@bmat;
@@ -88,7 +88,7 @@ runJaccard2 <- function(
 		data.use1 = obj1@gmat;
 		data.use2 = obj2@gmat;
 	}
-	
+
 	obj1@jmat@jmat = calJaccard(data.use1, data.use2);
 	obj1@jmat@p1 = Matrix::rowMeans(data.use1);
 	obj1@jmat@p2 = Matrix::rowMeans(data.use2);
@@ -119,11 +119,11 @@ eig_decomp <- function(M, n_eigs, sym = isSymmetric(M)) {
     pp = tcrossprod(p1, p2);
 	ss = matrix(rep(p1,each=length(p2)), ncol=length(p2), byrow=TRUE) +  matrix(rep(p2, each=length(p1)), ncol=length(p2), byrow=FALSE)
 	ee = pp/(ss - pp)
-	return(ee)	
+	return(ee)
 }
 
 trainRegression <- function(obj){
-	row.covs = log(Matrix::rowSums(obj@bmat)+1,10);		
+	row.covs = log(Matrix::rowSums(obj@bmat)+1,10);
 	row.covs.dens <- density(x = row.covs, bw = 'nrd', adjust = 1)
 	sampling_prob <- 1 / (approx(x = row.covs.dens$x, y = row.covs.dens$y, xout = row.covs)$y + .Machine$double.eps)
 	idx.ds <- sort(sample(x = seq(row.covs), size = min(1000, length(row.covs)), prob = sampling_prob));
@@ -133,7 +133,7 @@ trainRegression <- function(obj){
 	# calculate the expected jaccard index matrix given the read depth
 	emat.tr = .normOVE(b1.tr, b2.tr);
 	# estimate the global scaling factor
-	data = data.frame(x=emat.tr[upper.tri(emat.tr)], y=jmat.tr[upper.tri(jmat.tr)])	
+	data = data.frame(x=emat.tr[upper.tri(emat.tr)], y=jmat.tr[upper.tri(jmat.tr)])
 	model <- lm(y ~ x + I(x^2), data);
 	beta0 = as.numeric(model$coefficients)[1]
 	beta1 = as.numeric(model$coefficients)[2]
@@ -147,20 +147,49 @@ trainRegression <- function(obj){
 	return(obj)
 }
 
-normJaccard <- function(obj, beta0, beta1, beta2){
-	b1.te = obj@jmat@p1;
-	b2.te = obj@jmat@p2;
-	jmat.te = obj@jmat@jmat;
-	emat.te = .normOVE(b1.te, b2.te);
-	preds = beta0 + beta1 * emat.te + beta2 * (emat.te ** 2);
-	nmat.te = jmat.te/preds;
-	obj@jmat@nmat = nmat.te;
-	obj@jmat@norm = TRUE;
-	rm(jmat.te);
-	rm(emat.te);
-	rm(nmat.te);
-	rm(preds);
-	return(obj);
+
+# Normlize jaccard index
+# @param jmat Jaccard index matrix
+# @param b1 Coverage probability for rows
+# @param b2 Coverage probability for columns
+# @param method Method used for normalization c("normOVE", "normOVN")
+# @param k neighbour size for normOVN
+normJaccard <- function(jmat, b1, b2, method, k=15){
+	# estimate the expected jaccard index using OVN
+	#' @importFrom raster focal raster
+	.normOVN <- function(o, p1, p2, k){
+		# sort the jaccard index matrix based on the coverage
+		ind1 = order(p1);
+		ind2 = order(p2);
+		o_srt = as.matrix(o[ind1, ind2, drop=FALSE]);
+		# calculate expected jaccard index
+		mask_mat <- matrix(1, k, k);
+		exp = focal(raster(as.matrix(o_srt)), mask_mat, mean, na.rm=TRUE, pad = T);
+		ee = raster::as.matrix(exp)[order(ind1),order(ind2),drop=FALSE];
+		return(ee)
+	}
+
+	# estimate the expected jaccard index using OVE
+	.normOVE <- function(o, p1, p2, k){
+	    pp = tcrossprod(p1, p2);
+		ss = matrix(rep(p1,each=length(p2)), ncol=length(p2), byrow=TRUE) +  matrix(rep(p2, each=length(p1)), ncol=length(p2), byrow=FALSE)
+		ee = pp/(ss - pp)
+		return(ee)
+	}
+
+	jmat[jmat == 1] = mean(jmat);
+	x = jmat;
+	emat = eval(parse( text = paste(".", method, "(x, b1, b2, k)", sep="")));
+	if(method == "normOVE"){
+		data = data.frame(x=c(emat), y=c(jmat))
+		model = stats::lm(y ~ x, data)
+		nmat = matrix(model$residuals, nrow(emat), ncol(emat));
+	}else if(method == "normOVN"){
+		nmat = jmat - emat;
+	}
+	rm(jmat)
+	rm(emat)
+	return(nmat);
 }
 
 runEigDecomp <- function(obj, num.eigs){
@@ -201,4 +230,3 @@ runEigDecompExd <- function(obj1, obj2){
 	gc();
 	return(obj2);
 }
-
